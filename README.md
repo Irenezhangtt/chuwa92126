@@ -48,6 +48,9 @@ git checkout firstName_lastName/master
 git checkout -b firstName_lastName/hw1
 ```
 
+> **Branch names matter.** The submissions table below is generated automatically from the branch name,
+> so it must be `firstName_lastName/hwN` (e.g. `tingyu_chang/hw3`). Other names may not be counted.
+
 Work on your assignment, then commit and push:
 
 ```bash
@@ -65,9 +68,11 @@ git push origin firstName_lastName/hw1
    - **head repository**: `<your_github_username>/chuwa92126`, **compare**: `firstName_lastName/hw1`
 4. Title the PR `firstName_lastName hw1` and click **Create pull request**.
 
-After a homework PR is submitted, merge it into your own `firstName_lastName/master` so the next homework branch starts from the latest code.
-
 ## HW Submissions
 
+Updated automatically by [`.github/workflows/submissions.yml`](.github/workflows/submissions.yml) whenever a PR is opened, closed or edited. Do not edit this table by hand.
+
+<!-- SUBMISSIONS:START -->
 | GitHub | Student Name | HW | PR Status | Submitted At | PR URL |
 |--------|--------------|----|-----------|--------------|--------|
+<!-- SUBMISSIONS:END -->
