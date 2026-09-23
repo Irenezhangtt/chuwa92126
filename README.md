@@ -75,4 +75,5 @@ Updated automatically by [`.github/workflows/submissions.yml`](.github/workflows
 <!-- SUBMISSIONS:START -->
 | GitHub | Student Name | HW | PR Status | Submitted At | PR URL |
 |--------|--------------|----|-----------|--------------|--------|
+| tiffiong | Tiffany Iong | hw1 | open | 2026-09-23 14:04:37 | [link](https://github.com/KKKTT-cyk/chuwa92126/pull/1) |
 <!-- SUBMISSIONS:END -->
