@@ -1,0 +1,12 @@
+public class ProductTest {
+    public static void main(String[] args) {
+        Product product1 = new Product("P001", "Laptop", 999.99);
+        Product product2 = new Product("P001", "Tablet", 499.99);
+
+        System.out.println(product1);
+        System.out.println(product2);
+        System.out.println("Are equal: " + product1.equals(product2));
+        System.out.println("Same hash code: "
+                + (product1.hashCode() == product2.hashCode()));
+    }
+}
