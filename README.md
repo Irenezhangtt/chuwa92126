@@ -75,6 +75,7 @@ Updated automatically by [`.github/workflows/submissions.yml`](.github/workflows
 <!-- SUBMISSIONS:START -->
 | GitHub | Student Name | HW | PR Status | Submitted At | PR URL |
 |--------|--------------|----|-----------|--------------|--------|
+| allenk416 | Yan Zhang | hw1 | open | 2026-09-24 11:01:47 | [link](https://github.com/KKKTT-cyk/chuwa92126/pull/8) |
 | Ericsayhelloworld | Sicheng Xue | hw1 | open | 2026-09-24 02:16:10 | [link](https://github.com/KKKTT-cyk/chuwa92126/pull/5) |
 | jane0x5a | Jie Zhang | hw1 | open | 2026-09-24 00:44:49 | [link](https://github.com/KKKTT-cyk/chuwa92126/pull/3) |
 | lantshoe | Jie Yu | hw1 | open | 2026-09-24 02:59:21 | [link](https://github.com/KKKTT-cyk/chuwa92126/pull/6) |
