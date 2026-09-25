@@ -1,0 +1,79 @@
+## Question 1
+
+A checked exception must be caught or declared with `throws` because the Java compiler requires the programmer to handle expected, recoverable problems, such as reading a missing file. An unchecked exception is a subclass of `RuntimeException`. It usually represents programming mistakes, such as `NullPointerException` or `ArrayIndexOutOfBoundsException`, so Java does not require it to be caught or declared.
+
+## Question 2
+
+A catch block for a subclass must come before a catch block for its superclass because the superclass can catch exceptions from all of its subclasses. If the superclass catch block comes first, the subclass catch block can never be reached, and Java reports a compile-time error.
+
+## Question 3
+
+In a try-with-resources block, an `AutoCloseable` resource is automatically closed when the block finishes, even if an exception happens. Java calls the resource's `close()` method. If an exception happens in both the try block and `close()`, the close exception is usually saved as a suppressed exception.
+
+## Question 4
+
+`throw` is used inside a method or block to actually throw an exception object.
+
+`throws` is used in a method declaration to tell callers that the method may throw one or more exceptions.
+
+For example, `throw new IOException();` throws an exception, while `void readFile() throws IOException` declares that the method may throw it.
+
+## Question 5
+
+A `finally` block normally runs whether the try block succeeds, fails, or returns. If the `finally` block returns a value, that return value overrides any earlier return value or exception. Therefore, returning from `finally` can hide an exception and should generally be avoided.
+
+## Question 6
+
+An enum can have fields, constructors, and methods. Each enum constant can pass a value to the enum constructor, and a method can return that stored value.
+
+```java
+enum Level {
+    LOW(1), MEDIUM(2), HIGH(3);
+
+    private int code;
+
+    Level(int code) {
+        this.code = code;
+    }
+
+    public int getCode() {
+        return code;
+    }
+}
+```
+
+`Level.HIGH.getCode()` returns `3`.
+
+## Question 7
+
+I would choose an `ArrayList` when I need fast access by index, such as repeatedly calling `get(index)`, or when I mostly add items to the end of the list.
+
+I would choose a `LinkedList` when I frequently insert or remove elements from the beginning, end, or a known position using an iterator. A LinkedList is slower for random access because it must move through nodes to reach an index.
+
+## Question 8
+
+`HashSet` does not guarantee any iteration order. The elements may appear in a different order from the order in which they were added.
+
+`LinkedHashSet` keeps insertion order. When iterating over it, elements appear in the same order in which they were inserted.
+
+## Question 9
+
+`HashMap` does not guarantee any order for its keys.
+
+`TreeMap` stores keys in sorted order, using the keys' natural ordering or a provided comparator. For example, String keys are usually ordered alphabetically.
+
+## Question 10
+
+An `Iterator` is useful because `iterator.remove()` safely removes the current element while iterating. If we directly call `collection.remove()` during a for-each loop, Java may throw a `ConcurrentModificationException`.
+
+```java
+Iterator<String> iterator = names.iterator();
+
+while (iterator.hasNext()) {
+    String name = iterator.next();
+
+    if (name.equals("Tom")) {
+        iterator.remove();
+    }
+}
+```
