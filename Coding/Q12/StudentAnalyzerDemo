@@ -1,0 +1,56 @@
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public class StudentAnalyzerDemo {
+    public static void main(String[] args) {
+        List<Student> students = Arrays.asList(
+                new Student("S001", "Alice", 20, "CS",
+                        Arrays.asList(90.0, 85.0, 95.0)),
+                new Student("S002", "Bob", 21, "CS",
+                        Arrays.asList(70.0, 75.0, 80.0)),
+                new Student("S003", "Cathy", 20, "Math",
+                        Arrays.asList(92.0, 88.0, 91.0)),
+                new Student("S004", "David", 22, "Math",
+                        Arrays.asList(60.0, 65.0, 70.0)),
+                new Student("S005", "Emma", 19, "Physics",
+                        Arrays.asList(85.0, 90.0, 88.0)),
+                new Student("S006", "Frank", 21, "Physics",
+                        Arrays.asList(72.0, 68.0, 75.0))
+        );
+
+        StudentAnalyzer analyzer = new StudentAnalyzer();
+
+        System.out.println("Top 3 students:");
+        analyzer.getTopStudentNames(students, 3)
+                .forEach(System.out::println);
+
+        System.out.println("\nAverage score by major:");
+        Map<String, Double> averages =
+                analyzer.getAverageScoreByMajor(students);
+
+        averages.forEach((major, average) ->
+                System.out.println(major + ": " + average)
+        );
+
+        System.out.println("\nStudent with highest single score:");
+        Optional<Student> highestStudent =
+                analyzer.findStudentWithHighestSingleScore(students);
+
+        highestStudent.ifPresent(student ->
+                System.out.println(student.getName())
+        );
+
+        System.out.println("\nCS students above their major average:");
+        analyzer.getStudentsAboveAverageInMajor(students, "CS")
+                .forEach(System.out::println);
+
+        System.out.println("\nPass/fail groups:");
+        Map<Boolean, List<Student>> groups =
+                analyzer.partitionByPassFail(students, 75.0);
+
+        System.out.println("Passed: " + groups.get(true));
+        System.out.println("Failed: " + groups.get(false));
+    }
+}
