@@ -1,0 +1,165 @@
+## Question 1
+
+A Functional Interface is an interface that has exactly one abstract method. It can still have default methods, static methods, and methods inherited from `Object`.
+
+The annotation used is `@FunctionalInterface`. It is not mandatory, but it is recommended because the compiler checks that the interface has only one abstract method.
+
+Two built-in Functional Interfaces are:
+
+- `Predicate<T>`: its abstract method is `boolean test(T t)`. It tests a value and returns `true` or `false`.
+- `Function<T, R>`: its abstract method is `R apply(T t)`. It accepts a value of type `T` and returns a value of type `R`.
+
+## Question 2
+
+Output:
+
+```text
+Hello from Greeting
+And hello from Person
+```
+
+`Greeting` and `Farewell` both have a default method named `sayHello()`. Therefore, `Person` must override the method to resolve the conflict. Inside `Person.sayHello()`, `Greeting.super.sayHello()` explicitly calls the default method from `Greeting`, then the second print statement runs.
+
+## Question 3
+
+The lambda expression is:
+
+```java
+Comparator<String> comparator =
+        (s1, s2) -> s1.length() - s2.length();
+```
+
+Conversion steps:
+
+1. `Comparator<String>` is a functional interface because it has one abstract method: `compare(String s1, String s2)`.
+2. Remove `new Comparator<String>()`.
+3. Remove the `@Override` annotation.
+4. Remove the method name, return type, and braces of the anonymous class.
+5. Keep the method parameters and body as a lambda expression.
+
+## Question 4
+
+- A is valid. `Runnable` has no parameters and returns `void`.
+- B is invalid. `return` cannot be used in an expression lambda without braces. Correct version:
+
+```java
+Predicate<String> p = s -> s.isEmpty();
+```
+
+- C is invalid. A block lambda for `Function<Integer, Integer>` must return a value. Correct version:
+
+```java
+Function<Integer, Integer> f = x -> x * 2;
+```
+
+or:
+
+```java
+Function<Integer, Integer> f = x -> {
+    return x * 2;
+};
+```
+
+- D is valid. A lambda may explicitly declare the parameter type.
+- E is valid. Java infers that `a` and `b` are `Integer`.
+- F is valid. `Supplier<String>` has no parameters and returns a `String`.
+
+## Question 5
+
+1. `x -> System.out.println(x)` → `System.out::println`  
+   Type: Bound Instance method reference.
+
+2. `s -> s.toUpperCase()` → `String::toUpperCase`  
+   Type: Unbound Instance method reference.
+
+3. `x -> Math.abs(x)` → `Math::abs`  
+   Type: Static method reference.
+
+4. `() -> new ArrayList<>()` → `ArrayList::new`  
+   Type: Constructor reference.
+
+5. `(s1, s2) -> s1.compareTo(s2)` → `String::compareTo`  
+   Type: Unbound Instance method reference.
+
+## Question 6
+
+`Optional.of()` does not allow `null`. If its argument is `null`, it throws a `NullPointerException`.
+
+`Optional.ofNullable()` accepts a value that may be `null`. If the value is `null`, it returns an empty `Optional`.
+
+In this code, `Optional.of(value)` throws a `NullPointerException` because `value` is `null`. Therefore, the program stops before `opt2` is created or either `println` statement runs.
+
+## Question 7
+
+Output:
+
+```text
+--- Using orElse ---
+Creating default value
+Result: Hello
+--- Using orElseGet ---
+Result: Hello
+```
+
+`orElse(createDefault())` evaluates `createDefault()` immediately, even though `opt` contains `"Hello"`. Therefore, it prints `Creating default value`.
+
+`orElseGet(() -> createDefault())` receives a supplier. The supplier runs only if the Optional is empty. Since `opt` contains `"Hello"`, `createDefault()` is not called.
+
+## Question 8
+
+`map()` transforms each stream element into one result. `flatMap()` transforms each element into a stream and then combines all resulting streams into one stream.
+
+To get all product names from all orders:
+
+```java
+List<String> allProductNames = orders.stream()
+        .flatMap(order -> order.getProducts().stream())
+        .map(Product::getName)
+        .collect(Collectors.toList());
+```
+
+## Question 9
+
+Output:
+
+```text
+Stream created
+Calling findFirst...
+Filtering: 1
+Filtering: 2
+Mapping: 2
+Result: 20
+```
+
+Streams use lazy evaluation. The `filter()` and `map()` operations do not run when the stream is created. They run only when the terminal operation `findFirst()` is called.
+
+`findFirst()` is also short-circuiting. It checks `1`, rejects it because it is odd, checks `2`, maps it to `20`, and then stops because it found the first matching value.
+
+## Question 10
+
+Problems in the code:
+
+1. `Optional<List<Product>>` is usually unnecessary. An empty list is better than an absent list.
+2. Using `isPresent()` followed by `get()` is not the preferred Optional style.
+3. `calculateTotal()` returns `null`, which breaks the purpose of `Optional`.
+4. A method returning `Optional<BigDecimal>` should return `Optional.empty()` when there is no result.
+
+One possible fix is:
+
+```java
+public void processProducts(List<Product> products) {
+    products.forEach(this::process);
+}
+
+public Optional<BigDecimal> calculateTotal(List<Product> products) {
+    if (products == null || products.isEmpty()) {
+        return Optional.empty();
+    }
+
+    BigDecimal total = products.stream()
+            .map(Product::getPrice)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    return Optional.of(total);
+}
+```
