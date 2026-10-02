@@ -1,0 +1,73 @@
+Question 1
+count++ is not atomic because it contains three steps:
+1. Read the current value of count.
+2. Add 1 to that value.
+3. Write the new value back to count.
+If two threads read the same value at the same time, both may calculate the same new value and write it back. For example, if count is 5, both threads may read 5, calculate 6, and write 6. The final result is 6 instead of 7. This is called a race condition or a lost update.
+
+Question 2
+sleep() pauses the current thread for a specified amount of time. It does not release any lock held by the thread. The thread wakes when the sleep time ends or when it is interrupted.
+wait() releases the monitor lock of the object it is called on and puts the thread into a waiting state. The thread wakes when another thread calls notify(), notifyAll(), it is interrupted, or it wakes spuriously.
+wait() must be called inside a synchronized block because the thread must own that object's monitor before it can release the monitor and wait safely.
+
+Question 3
+An instance synchronized method locks on this, which means it locks one particular object instance.
+A static synchronized method locks on ClassName.class, which is the Class object shared by all instances of that class.
+These are different locks. Therefore, one thread can run an instance synchronized method while another thread runs a static synchronized method of the same class. They do not block each other unless they explicitly use the same lock object.
+
+Question 4
+volatile guarantees visibility. When one thread writes to a volatile variable, other threads that later read the variable can see the most recent value. It also prevents certain instruction reordering around that variable.
+However, volatile does not make compound operations atomic. For example, this is still unsafe:
+
+private volatile int count = 0;
+
+public void increment() {
+    count++;
+}
+
+Multiple threads can still perform count++ at the same time and lose updates. The method needs synchronized, a Lock, or an atomic class to make the increment operation thread-safe.
+
+Question 5
+The four Coffman conditions for deadlock are:
+1. Mutual exclusion: a resource can be used by only one thread at a time.
+2. Hold and wait: a thread holds one resource while waiting for another.
+3. No preemption: a resource cannot be forcibly taken away.
+4. Circular wait: threads form a cycle while waiting for each other's resources.
+Using a consistent lock-acquisition order breaks circular wait. For example, every thread must always lock lockA before lockB.
+Using tryLock() with a timeout can avoid hold and wait when a thread releases any lock it already holds and retries later if it cannot obtain the next lock.
+
+Question 6
+ReentrantLock provides additional capabilities beyond synchronized, including:
+- tryLock() and timed tryLock()
+- lockInterruptibly()
+- optional fair locking
+- multiple Condition objects
+- methods such as isLocked() and getHoldCount()
+A realistic use of tryLock() is avoiding deadlock when a thread needs more than one lock. A realistic use of multiple Condition objects is a bounded queue, where producers wait for “not full” and consumers wait for “not empty.”
+
+Question 7
+CAS means Compare-And-Swap. It compares a memory value with an expected value. If they are equal, it replaces the value with a new value atomically. If they are not equal, the operation fails.
+A method such as incrementAndGet() repeatedly does this:
+1. Read the current value.
+2. Calculate current + 1.
+3. Attempt CAS using the current value as the expected value.
+4. If CAS fails because another thread changed the value, read again and retry.
+5. If CAS succeeds, return the new value.
+This retry loop allows multiple threads to update a value without using a traditional lock.
+
+Question 8
+Collections.synchronizedMap(new HashMap<>()) uses one lock for the entire map. When one thread accesses the map, other threads often have to wait, even if they want to access different keys.
+ConcurrentHashMap allows more concurrency by using fine-grained locking and CAS operations. Conceptually, lock striping means different parts of the map can be protected independently. Threads working on different buckets or bins can often continue at the same time instead of waiting for one global lock.
+
+Question 9
+When a task is submitted to a ThreadPoolExecutor, it checks in this order:
+1. If the number of running threads is less than corePoolSize, it creates a new core thread for the task.
+2. Otherwise, it tries to place the task in the work queue.
+3. If the queue is full and the number of threads is less than maximumPoolSize, it creates a new non-core thread.
+4. If the queue is full and the pool has already reached maximumPoolSize, the task is rejected using the configured rejection policy.
+
+Question 10
+CountDownLatch is one-time use. A thread calls await() and waits until other threads call countDown() enough times to reduce the count to zero. It cannot be reset and reused.
+CyclicBarrier is reusable. A fixed group of threads calls await() and waits for each other. When all participating threads arrive, they continue together and the barrier can be used again.
+A good use case for CountDownLatch is waiting for several startup tasks to finish before starting an application.
+A good use case for CyclicBarrier is coordinating several worker threads that must complete each phase of a calculation before beginning the next phase.
