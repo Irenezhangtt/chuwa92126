@@ -1,0 +1,7 @@
+Q1. GraphQL is an API query language where clients request exactly the data fields they need.
+
+Q2. It solves over-fetching, under-fetching, and needing many REST endpoints or requests for related data.
+
+Q3. The backend defines a schema; clients send queries to read data and mutations to change data, usually through one GraphQL endpoint.
+
+Q4. REST uses multiple resource endpoints and fixed responses. GraphQL usually uses one endpoint and lets the client choose the response fields. REST is simpler for normal CRUD; GraphQL is useful when clients need different data shapes.
