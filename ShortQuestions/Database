@@ -1,0 +1,73 @@
+175. Combine Two Tables
+SELECT firstName, lastName, city, state
+FROM Person
+LEFT JOIN Address ON Person.personId = Address.personId;
+
+176. Second Highest Salary
+SELECT (
+    SELECT DISTINCT salary
+    FROM Employee
+    ORDER BY salary DESC
+    LIMIT 1 OFFSET 1
+) AS SecondHighestSalary;
+
+1757. Recyclable and Low Fat Products
+SELECT product_id
+FROM Products
+WHERE low_fats = 'Y' AND recyclable = 'Y';
+
+181. Employees Earning More Than Their Managers
+SELECT e1.name AS Employee
+FROM Employee e1
+JOIN Employee e2 ON e1.managerId = e2.id
+WHERE e1.salary > e2.salary;
+
+180. Consecutive Numbers
+SELECT DISTINCT l1.num AS ConsecutiveNums
+FROM Logs l1
+JOIN Logs l2
+  ON l1.id = l2.id - 1 AND l1.num = l2.num
+JOIN Logs l3
+  ON l2.id = l3.id - 1 AND l2.num = l3.num;
+
+196. Delete Duplicate Emails
+DELETE p1
+FROM Person p1
+JOIN Person p2
+  ON p1.email = p2.email
+ AND p1.id > p2.id;
+
+183. Customers Who Never Order
+SELECT c.name AS Customers
+FROM Customers c
+LEFT JOIN Orders o ON c.id = o.customerId
+WHERE o.id IS NULL;
+
+584. Find Customer Referee
+SELECT name
+FROM Customer
+WHERE referee_id != 2 OR referee_id IS NULL;
+
+595. Big Countries
+SELECT name, population, area
+FROM World
+WHERE area >= 3000000 OR population >= 25000000;
+
+184. Department Highest Salary
+SELECT d.name AS Department,
+       e.name AS Employee,
+       e.salary AS Salary
+FROM Employee e
+JOIN Department d ON e.departmentId = d.id
+JOIN (
+    SELECT departmentId, MAX(salary) AS max_salary
+    FROM Employee
+    GROUP BY departmentId
+) m ON e.departmentId = m.departmentId
+   AND e.salary = m.max_salary;
+
+596. Classes More Than 5 Students
+SELECT class
+FROM Courses
+GROUP BY class
+HAVING COUNT(DISTINCT student) >= 5;
