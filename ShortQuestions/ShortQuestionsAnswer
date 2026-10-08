@@ -1,0 +1,13 @@
+Question 1
+
+Factory Method creates one product object. A parent class defines a factory method, and subclasses decide which specific product to create.
+
+Abstract Factory creates a family of related product objects. It provides multiple factory methods for matching products, such as a Windows button and Windows checkbox.
+
+In short, Factory Method focuses on creating one product, while Abstract Factory creates a group of related products.
+
+Question 2
+
+Telescoping constructors are hard to use because many parameters of the same type can be confusing. For example, it is easy to put a phone number in the email parameter position. They are also difficult to read and maintain when many parameters are optional.
+
+The Builder pattern solves this by creating an object step by step with clearly named methods. It makes code easier to read, supports optional fields, and can validate required fields before the final object is created.
