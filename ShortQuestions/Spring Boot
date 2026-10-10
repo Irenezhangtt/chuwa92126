@@ -1,0 +1,48 @@
+Question 1
+Using new makes OrderService tightly coupled to a specific dependency and makes testing harder. IoC lets Spring create objects, and dependency injection provides the dependency from outside.
+
+Question 2
+@SpringBootApplication combines:
+  - @SpringBootConfiguration
+  - @EnableAutoConfiguration
+  - @ComponentScan
+A sibling package is not scanned because component scanning starts from the main class package and scans only its subpackages.
+
+Question 3
+Constructor injection is recommended because required dependencies are clear, can be final, and are easy to test. Setter injection is useful for optional dependencies. Field injection hides dependencies and is harder to test.
+
+Question 4
+Spring throws NoUniqueBeanDefinitionException because it finds two NotificationSender beans.
+Three solutions:
+  - Use @Primary.
+  - Use @Qualifier.
+  - Inject by bean name with @Resource.
+
+Question 5
+Spring singleton beans should be stateless because one instance is shared by multiple requests and threads. A shared List can cause race conditions and data leaks.
+Spring singleton means one instance per ApplicationContext. GoF Singleton means one instance controlled by the class.
+
+Question 6
+Bean lifecycle order:
+  1. Constructor
+  2. Setter/field injection
+  3. @PostConstruct
+  4. BeanPostProcessor.postProcessAfterInitialization()
+  5. @PreDestroy
+AOP proxies are usually created during postProcessAfterInitialization().
+
+Question 7
+Spring Boot finds auto-configuration classes from:
+  META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+  @ConditionalOnClass checks whether a class exists on the classpath.
+  @ConditionalOnMissingBean creates a default bean only if the user has not created one.
+  A custom ObjectMapper causes Spring Boot’s default ObjectMapper to back off.
+
+Question 8
+@Value injects one property value. @ConfigurationProperties binds multiple related properties into a typed class.
+Property precedence:
+  command-line arguments
+  Java system properties
+  OS environment variables
+  profile-specific files
+  application.yml
