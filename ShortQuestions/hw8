@@ -1,0 +1,49 @@
+Question 1
+A Servlet Filter is defined by the Servlet specification and runs before DispatcherServlet. It can access the raw request and response.
+A Spring MVC HandlerInterceptor is a Spring feature and runs after DispatcherServlet chooses a controller. It can access the controller handler and ModelAndView.
+
+Question 2
+Code before chain.doFilter() runs before the next filter/controller. Code after it runs after the request returns.
+If chain.doFilter() is not called, the request stops there and does not reach later filters or the controller.
+The filter chain uses the Chain of Responsibility and Decorator patterns.
+
+Question 3
+Two ways to register a filter:
+  - Add @Component and implement Filter.
+  - Create a FilterRegistrationBean.
+Use @Order, Ordered, or setOrder() to control order.
+Spring Security’s filter chain normally runs early, before normal application filters.
+A filter can be registered twice if it has @Component and is also added using FilterRegistrationBean.
+
+Question 4
+preHandle runs before the controller.
+postHandle runs after the controller succeeds but before view rendering.
+afterCompletion runs after the request finishes.
+If the controller throws an exception, postHandle does not run, but afterCompletion runs with the exception.
+postHandle cannot change a @RestController body because the response body is already written by the message converter.
+
+Question 5
+Successful request order:
+  A.preHandle
+  B.preHandle
+  Controller
+  B.postHandle
+  A.postHandle
+  B.afterCompletion
+  A.afterCompletion
+If B.preHandle() returns false:
+  A.preHandle
+  B.preHandle
+  A.afterCompletion
+The controller, both postHandle methods, and B.afterCompletion do not run.
+
+Question 6
+A filter runs outside DispatcherServlet, so its exception does not reach @RestControllerAdvice. An exception in preHandle is inside Spring MVC, so Spring can handle it with @RestControllerAdvice.
+Two ways for a filter to return JSON errors:
+  - Set status and content type, then write JSON directly to HttpServletResponse.
+  - Delegate the exception to Spring’s HandlerExceptionResolver.
+
+Question 7
+In a filter registration, /api/* is a Servlet URL pattern and matches /api paths before Spring MVC.
+In an interceptor, /api/* is a Spring MVC path pattern and matches only one path level. Use /api/** to match all nested API paths.
+An authentication interceptor should exclude /error so Spring can return error responses without the interceptor blocking or looping on the error request.
