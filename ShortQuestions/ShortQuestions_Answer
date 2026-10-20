@@ -1,0 +1,33 @@
+1. Kafka 是分布式消息/事件流平台，用于高吞吐、可扩展的消息传递、异步解耦、日志收集和数据流处理。
+
+2. 一条消息通常包含：topic、partition、offset、timestamp、key、value 和 headers。
+
+3. Producer 负责把消息发送到 Kafka 的 Topic，并决定或影响消息进入哪个 Partition。
+
+4. Consumer 负责从 Topic 读取、处理消息，并提交消费位置。
+
+5. Topic 是消息的逻辑分类，例如 orders、payments。分类便于管理、订阅和设置不同配置。
+
+6. Broker 是 Kafka 集群中的一台服务器，负责存储 Partition、接收消息和提供消息读取。多个 Broker 可以提高容量、吞吐量和容错能力。
+
+7. Partition 是 Topic 的分片。多个 Partition 可以让多个 Producer 和 Consumer 并行工作，提高吞吐量。
+
+8. Offset 是消息在某个 Partition 内的位置，不是整个 Topic 的全局编号。
+
+9. Consumer Group 是一组共同消费消息的 Consumer。同一个 Group 中，一个 Partition 同时只能分配给一个 Consumer。
+
+10. Key 通常经过哈希后决定消息进入哪个 Partition。相同 Key 通常进入同一个 Partition，因此可以保证该 Key 的消息顺序。
+
+11. Topic 是逻辑消息分类；Partition 是 Topic 内部的实际分片。
+
+12. Broker 是一台 Kafka 服务器；Kafka Cluster 是多个 Broker 组成的集群。
+
+13. Producer 和 Consumer 不需要直接通信。Producer 写入 Kafka，Consumer 从 Kafka 读取，这样可以解耦、缓冲流量，并支持 Consumer 离线后继续消费。
+
+14. Offset 不是 Producer 决定的。消息写入 Partition 后，Kafka 分配 Offset；Consumer Group 记录自己已经消费到哪个 Offset。
+
+15. 不正确。Kafka 只保证 同一个 Partition 内 的消息顺序，不保证整个 Topic 中所有 Partition 的全局顺序。
+
+16. 最多 3 个 Consumer 可以同时消费，因为只有 3 个 Partition。剩下 2 个 Consumer 会处于空闲状态，没有 Partition 被分配。
+
+17. 不同 Consumer Group 会各自消费全部消息。它们有各自独立的 Offset，互不影响。Kafka 的 Topic、Partition、Consumer Group 和顺序保证都遵循这些规则。
