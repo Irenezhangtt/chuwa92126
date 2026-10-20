@@ -1,0 +1,69 @@
+Question 1
+A cross-cutting concern is functionality used by many classes, such as logging, security, or transactions.
+Tangling means business logic and logging/security code are mixed together in OrderService.
+Scattering means the same logging/security code is repeated in many classes.
+
+Question 2
+  - Aspect: class containing cross-cutting logic.
+  - Join point: point where advice can run.
+  - Pointcut: rule that selects join points.
+  - Advice: code that runs before/after a method.
+  - Target: original bean being advised.
+  - Proxy: Spring-created wrapper around the target.
+In Spring AOP, a join point is always a method execution.
+
+Question 3
+  - @Before: runs before the target method.
+  - @AfterReturning: runs after normal return.
+  - @AfterThrowing: runs when an exception is thrown.
+  - @After: runs finally, whether success or failure.
+  - @Around: runs before and after; controls target execution.
+Only @Around can replace the return value or prevent the target from running by not calling proceed().
+
+Question 4
+Common @Around mistakes:
+  - Forgetting proceed() → target method never runs.
+  - Calling proceed() twice → target method runs twice.
+  - Returning the wrong value or null → caller receives an incorrect result.
+
+Question 5
+  execution(* com.example.orders.service.*.*(..))
+Matches any method in any class directly inside service.
+  
+  execution(* com.example.orders..*(..))
+Matches any method in com.example.orders and all subpackages.
+
+  execution(* *(Long,..))
+Matches any method whose first parameter is Long.
+
+  @annotation(com.example.orders.app.LogExecutionTime)
+Matches methods annotated with @LogExecutionTime.
+
+Question 6
+Spring AOP creates a proxy that wraps the target bean. Calls through the proxy run advice before/after the target method.
+The proxy is usually created during BeanPostProcessor.postProcessAfterInitialization().
+Check whether a bean is a proxy with:
+  AopUtils.isAopProxy(bean)
+
+Question 7
+Calling an annotated method from another method in the same class is called self-invocation. It bypasses the Spring proxy, so advice does not run.
+Fixes:
+  - Move the annotated method into another Spring bean.
+  - Inject the bean’s own proxy and call through that proxy.
+
+Question 8
+By default, @Transactional rolls back for unchecked exceptions (RuntimeException and Error), but not checked exceptions.
+No rollback may happen when:
+  - A checked exception is thrown.
+  - The exception is caught and not rethrown.
+  - noRollbackFor is configured for that exception.
+
+Question 9
+SecurityAspect has order 1, so it is outermost:
+  Security before
+  Timing before
+  Target method
+  Timing after
+  Security after
+Spring AOP uses runtime proxies and supports method-execution join points.
+AspectJ uses compile-time or load-time weaving and supports more join points, including constructors, field access, and method execution.
