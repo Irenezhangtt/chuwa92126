@@ -1,0 +1,40 @@
+Question 1
+A simple loop loads too much data into memory, has no restart support, no transaction control, and no retry/skip handling. Spring Batch solves these with streaming readers, JobRepository checkpoints, chunk transactions, and fault tolerance.
+
+Question 2
+  - Job: batch job definition.
+  - Step: one phase inside a job.
+  - JobInstance: one logical job run identified by parameters, such as runDate=2026-10-23.
+  - JobExecution: one attempt to run a JobInstance.
+  - StepExecution: one attempt to run a step inside a JobExecution.
+
+Question 3
+Chunk processing reads items one by one, processes them, and writes them in groups. Each chunk is usually one transaction.
+A larger chunk is faster but uses more memory and repeats more work after failure. A smaller chunk uses less memory but has more transaction overhead.
+
+Question 4
+A tasklet step runs one task once, such as deleting a temporary file.
+A chunk-oriented step repeatedly reads, processes, and writes many items, such as importing a CSV file.
+
+Question 5
+ItemReader returns one item at a time and returns null when input ends.
+ItemProcessor transforms an item. Returning null filters the item.
+ItemWriter receives a whole Chunk to write items efficiently in one batch/transaction.
+
+Question 6
+Filtering means intentionally returning null from the processor.
+Skipping means an exception happens, but Spring Batch ignores that item according to skip rules.
+Retry means Spring Batch tries the failed item again.
+Example: invalid account data should be skipped; a temporary database/network error can be retried.
+
+Question 7
+A reader using #{jobParameters['inputFile']} needs @StepScope because job parameters are available only when the step starts.
+
+Question 8
+Restarting with the same identifying parameters restarts the failed JobInstance from its saved checkpoint.
+The reader must save its read position, and the writer must be idempotent or transactional.
+JobInstanceAlreadyCompleteException is thrown when the same JobInstance has already completed successfully.
+
+Question 9
+A multi-threaded step uses multiple threads in one step. Its reader, processor, and writer must be thread-safe.
+Partitioning splits input into separate partitions, and each partition has its own StepExecution. It is better for large files or ranges of data.
