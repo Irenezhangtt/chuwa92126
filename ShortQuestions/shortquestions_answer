@@ -1,0 +1,9 @@
+1. A static nested class does not need an outer-class object. An inner class has a hidden reference to its outer object. If the inner object is kept alive, it can also keep the outer object alive and cause a memory leak. Static nested classes are preferred unless access to an outer instance is needed.
+
+2. Type erasure means generic type information is removed at runtime. `List<String>` becomes roughly `List`. Java cannot create `new T()`, `new T[10]`, or check `obj instanceof List<String>` because the real type is unavailable at runtime. A bridge method is a compiler-generated method that preserves polymorphism after erasure.
+
+3. PECS means Producer Extends, Consumer Super. `List<? extends Number>` can be read as `Number`, but cannot add values except `null`. `List<? super Integer>` can add `Integer` values, but can only read values as `Object`. Generics are invariant for type safety; arrays are covariant but may fail at runtime with `ArrayStoreException`.
+
+4. `SOURCE` annotations disappear after compilation; `CLASS` annotations are stored in bytecode but are not normally available through reflection; `RUNTIME` annotations are available through reflection. `@Target` limits where an annotation can be used. `@Inherited` lets subclasses inherit a class annotation. `@Repeatable` allows the same annotation more than once. Reflection requires `RUNTIME`.
+
+5. A `Class` object can be obtained with `Type.class`, `object.getClass()`, or `Class.forName("package.Type")`. `setAccessible(true)` tries to allow access to private members, but Java modules can block it unless the package is opened. `Method.invoke()` wraps an exception thrown by the target method in `InvocationTargetException`.
