@@ -1,0 +1,48 @@
+
+1. ORM（Object-Relational Mapping，对象关系映射）让 Java 对象与关系型数据库互相映射，开发者可以通过对象操作数据，而不必一直手写 SQL。
+  - Java class ↔ database table
+  - Java object ↔ database row
+  - Java field ↔ database column
+
+2. JPA 是 Java 的标准规范，定义了接口和注解；Hibernate 是实现 JPA 的一个 ORM 框架。 所以JPA 是标准，Hibernate 是 implementation。
+
+3. Spring Data JPA 减少了 Repository 的重复代码。只要定义接口并继承 `JpaRepository<Student, Long>`，Spring 会自动提供 `save()`、`findById()`、`deleteById()` 等实现。关系是：Spring Data JPA 基于 JPA 规范工作，通常使用 Hibernate 作为底层 JPA provider。
+
+4. Entity 是映射到数据库表的 Java 类。
+  - `@Entity`：声明这是一个 JPA 实体。
+  - `@Table(name = "students")`：指定对应的表名。
+  - `@Id`：标记主键字段。
+  - `@GeneratedValue`：主键值由数据库或 JPA 自动生成。
+
+5. 主键唯一标识每一行数据，JPA 用它来查询、更新、删除和区分不同对象。 新 Entity 在保存前 ID 可能是 `null`，因为 ID 通常由数据库在 `INSERT` 后自动生成。
+
+6. Student 和 Course 是多对多关系：一个学生可以选多门课，一门课也可以被多个学生选择。  使用 `Enrollment` 可以保存关系本身的额外信息，例如 `enrolledAt`、`grade` 或 `status`。因此它比简单的 `@ManyToMany` 更灵活。
+
+7. 什么是 owning side？在下面关系中，`Enrollment` 是 owning side：
+  
+  @ManyToOne
+  @JoinColumn(name = "student_id")
+  private Student student;
+
+· owning side 是 Enrollment.student。
+· 外键 column 是 student_id。
+· owning side 负责维护关系和更新外键。
+
+8. mappedBy = "student" 表示什么？
+  @OneToMany(mappedBy = "student")
+  private List<Enrollment> enrollments;
+它表示 Student 是关系的 inverse side，真正维护关系的是 Enrollment 类中的 student Java field。"student" 是 Java field 名称，不是数据库 column 名称；数据库 column 名称是 student_id。
+
+9. LAZY：需要数据时才加载。EAGER：查询主对象时立刻加载关联对象。关系通常不应该全部使用 EAGER，因为会加载过多数据，可能造成性能问题和不必要的 SQL 查询。
+
+10. 以“根据 studentId 查询学生的 Enrollment”为例：
+  1. HTTP Request：客户端发送请求。
+  2. Controller：接收请求和 studentId。
+  3. Service：处理业务逻辑。
+  4. Repository：调用查询方法。
+  5. Hibernate：把 Java/JPA 查询转换成 SQL。
+  6. JDBC：把 SQL 发送给数据库。
+  7. Database：执行 SQL 并返回结果。
+  
+最后结果按相反方向返回：Database → JDBC → Hibernate → Repository → Service → Controller → HTTP Response。
+  :codex-file-citation{path="/Users/edgerunner-/Downloads/Data-Access-Homework.pdf" purpose="source"}
