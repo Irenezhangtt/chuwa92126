@@ -1,0 +1,71 @@
+## 1. Imperative vs declarative and level-triggered controllers
+
+An imperative command says how to act, for example: “start 3 checkout Pods on these hosts.” A declarative object says the desired state: “there should be 3 checkout replicas.”
+
+`spec` describes the desired state. `status` describes the current observed state.
+
+Kubernetes controllers are level-triggered: they repeatedly compare desired state with actual state and reconcile differences.
+
+- Lost event: an edge-triggered controller may miss the action forever. A level-triggered controller reconciles later when it sees that actual state still differs from desired state.
+- Controller restart: an edge-triggered controller may lose past events. A level-triggered controller lists current objects again and continues reconciling.
+- Duplicate event: an edge-triggered controller may perform an action twice. A level-triggered controller performs idempotent reconciliation because the desired state is unchanged.
+
+## 2. Why components use the API server
+
+Kubernetes components communicate through the API server instead of calling each other directly.
+
+Benefits:
+
+1. The API server is a central source of truth for cluster state.
+2. Components are loosely coupled and can be independently restarted or replaced.
+3. Authentication, authorization, validation, auditing, and versioning are centralized.
+4. Controllers can watch the same objects and react to changes.
+
+The main cost is extra API-server, etcd, network, and serialization overhead.
+
+`resourceVersion` supports optimistic concurrency. If two controllers read the same object, the first update with the current version succeeds. The second update receives `409 Conflict`, then must read the newest object, merge or recompute its changes, and retry. Locks are unnecessary because the API server performs compare-and-update atomically.
+
+If a requested watch revision has been compacted, the client receives an expired-resource-version error, relists the objects, obtains a fresh `resourceVersion`, and starts a new watch.
+
+## 3. Pods, ReplicaSets, Deployments, and Services
+
+- Pod: the smallest deployable unit; contains one or more containers.
+- ReplicaSet: ensures a specified number of matching Pods are running.
+- Deployment: manages ReplicaSets and provides rolling updates, rollbacks, and declarative application updates.
+- Service: gives a stable virtual IP/DNS name and load-balances traffic to matching Pods.
+
+A Deployment creates and manages a ReplicaSet. The ReplicaSet creates Pods. A Service selects those Pods by labels and routes traffic to them.
+
+## 4. Control plane and data plane
+
+The control plane manages desired cluster state. It includes the API server, scheduler, controller manager, and etcd.
+
+The data plane runs workloads and routes traffic. It includes worker nodes, kubelet, container runtime, kube-proxy, and Pods.
+
+If the control plane is temporarily unavailable, existing Pods usually continue running and existing Service traffic can continue. However, new Pods cannot be scheduled, failed Pods may not be replaced, and configuration changes cannot be applied until the control plane returns.
+
+## 5. Kubernetes API request flow
+
+When a client creates an object, the request generally follows this flow:
+
+1. Authentication: verifies who the client is.
+2. Authorization: checks whether that identity is allowed to perform the action.
+3. Admission control: validates or mutates the request according to policies.
+4. Validation: checks object schema and required fields.
+5. Persistence: the API server stores the object in etcd.
+
+Authentication answers “Who are you?”  
+Authorization answers “Are you allowed to do this?”  
+Admission control answers “Should this request be changed or accepted by policy?”
+
+## 6. Purpose of resourceVersion
+
+`resourceVersion` is an opaque version value representing an object's revision. A client includes the version it read when updating an object.
+
+If the version is still current, the update succeeds. If another client changed the object first, the version no longer matches and Kubernetes returns a conflict. The client must read the latest version and retry. This prevents one client from silently overwriting another client's update.
+
+## 7. List and Watch
+
+A controller first performs a `List` request to receive the current objects and a `resourceVersion`. Then it starts a `Watch` from that version to receive add, update, and delete events.
+
+This is more efficient than repeatedly listing every object because the controller receives only changes after the initial list. If the watch falls behind or its revision is compacted, the controller relists and starts watching again.
