@@ -1,74 +1,23 @@
-## 1. Why thread-per-request wastes resources
+## 1. Logs, Metrics, and Traces
 
-In a thread-per-request model, a thread waits while the database or external API responds. During that waiting time, it uses memory but does no CPU work. With many I/O-bound requests, the application needs many blocked threads. Reactor uses a small number of threads and continues other work while I/O is waiting.
+**Logs** are individual event records. A log usually contains a timestamp, level, message, and attributes. Log volume grows mainly with traffic because more requests produce more events. Logs are best for answering: “What exactly happened?”
 
-## 2. Reactor pattern
+**Metrics** are numeric measurements over time, such as request count, latency, CPU usage, and error rate. A metric record contains a name, timestamp, value, and labels. Metric storage grows mainly with the number of label combinations (cardinality). Metrics are best for answering: “Is the system healthy?” and “When did performance change?”
 
-- Demultiplexer: watches many I/O events.
-- Event loop: receives events and dispatches work.
-- Acceptor: accepts new connections.
-- Handlers: process read/write events.
+**Traces** follow one request across services. A trace contains spans, and each span has a trace ID, span ID, parent ID, timestamps, duration, and attributes. Trace volume grows with traffic and the number of services a request touches. Traces are best for answering: “Which service caused this request to be slow or fail?”
 
-Blocking an event-loop thread is harmful because that one thread cannot process other connections.
+A telemetry pipeline is high-throughput and write-heavy because applications continuously send logs, metrics, and traces. It is low-frequency for reads because dashboards and investigations query the stored data less often than applications write it.
 
-## 3. Reactive Streams interfaces
+## 2. Log storage models
 
-The four interfaces are `Publisher`, `Subscriber`, `Subscription`, and `Processor`.
+A full-text inverted-index system indexes words and fields when logs are written. This makes writes more expensive, but arbitrary text searches are fast. High-cardinality fields create many index entries and increase storage and memory costs.
 
-Sequence: `Subscriber` calls `subscribe()`, Publisher calls `onSubscribe()`, Subscriber calls `request(n)`, Publisher sends up to `n` `onNext()` signals, then sends `onComplete()` or `onError()`.
+A label-index system stores logs in compressed chunks, often in object storage. At write time it mainly stores labels and compresses log chunks, so writes are cheaper. Queries with labels such as `service=payment` are fast, but searching arbitrary text can be slower because chunks must be scanned. High-cardinality labels create too many streams and small chunks, reducing efficiency.
 
-`request(n)` provides backpressure: it tells the publisher how many items the subscriber can handle.
+For a platform with very high volume and mostly “this service, last 15 minutes” searches, I would choose label-indexed compressed chunks. The query has a known service label and time range, so it can efficiently select only the relevant chunks while keeping write and storage costs lower.
 
-## 4. Mono and Flux
+## 3. Pull-based vs push-based metrics
 
-`Mono` emits zero or one item. `Flux` emits zero to many items.
+In a pull model, a collector discovers services and regularly requests metrics from each target. The collector controls the collection rate. If a target is down, the collector notices a failed scrape. Pull works well inside one network, but firewalls or private networks can prevent the collector from reaching targets. Short-lived batch jobs may finish before the next scrape.
 
-Nothing happens until `subscribe()` because Reactor pipelines are lazy.
-
-`Mono.just(buildReport())` calls `buildReport()` immediately.  
-`Mono.fromCallable(() -> buildReport())` calls it later, when subscribed.
-
-## 5. map, flatMap, concatMap, and flatMapSequential
-
-- `map`: function returns a normal value; keeps order.
-- `flatMap`: function returns a Publisher; inner calls may run concurrently; output order is not guaranteed.
-- `concatMap`: function returns a Publisher; runs one inner Publisher at a time; keeps order.
-- `flatMapSequential`: inner calls may run concurrently, but output keeps source order.
-
-## 6. Error handling
-
-A `try/catch` around pipeline creation does not catch asynchronous errors because errors happen later, after subscription.
-
-- `onErrorReturn`: return a fallback value.
-- `onErrorResume`: switch to another Publisher.
-- `onErrorMap`: convert one exception to another.
-- `retryWhen`: retry according to a rule.
-- `timeout`: fail if no result arrives within a specified time.
-
-## 7. publishOn and subscribeOn
-
-`subscribeOn` changes the scheduler used for subscription and upstream work.  
-`publishOn` changes the scheduler for downstream operators.
-
-A blocking JDBC call should use `Schedulers.boundedElastic()`.
-
-## 8. Backpressure
-
-Backpressure lets a slow subscriber control how much data it receives by calling `request(n)`.
-
-If a source such as `Flux.interval` cannot slow down, use strategies such as buffering, dropping items, keeping only the latest item, or producing an error.
-
-## 9. Cold and hot publishers
-
-A cold publisher starts work separately for each subscriber. Therefore, subscribing twice to the same `WebClient` Mono sends two HTTP requests.
-
-A hot publisher shares emitted data among subscribers.
-
-`cache()` stores and replays the result for later subscribers.  
-`share()` shares one active subscription, but does not replay old data to later subscribers.
-
-## 10. Spring MVC vs Spring WebFlux
-
-Spring MVC commonly uses blocking, thread-per-request processing. Spring WebFlux uses non-blocking reactive processing and event loops.
-
-Spring MVC with virtual threads can be better when the application uses blocking libraries such as JDBC, has simple synchronous code, or does not need reactive streams end-to-end. WebFlux is better for high-concurrency non-blocking I/O workloads.
+In a push model, applications send metrics to a collector or gateway. It works well for short-lived jobs and for applications behind firewalls because the application makes the outbound connection. The application controls when data is sent. However, if an application misbehaves and sends too much data, it can overload the collector unless rate limits, queues, or gateways are used.
