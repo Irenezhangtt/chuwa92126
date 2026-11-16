@@ -1,0 +1,87 @@
+## 1. Histogram cardinality
+
+Each label combination exports:
+
+- 8 finite buckets
+- 1 `+Inf` bucket
+- 1 `sum`
+- 1 `count`
+
+Therefore, each label combination creates `11` series.
+
+Initial label combinations:
+
+```text
+100 instances × 20 endpoints × 4 status values = 8,000
+Initial series count:
+8,000 × 11 = 88,000 series
+With user_id having 50,000 values:
+8,000 × 50,000 = 400,000,000 label combinations
+400,000,000 × 11 = 4,400,000,000 series
+This harms memory, disk, index size, ingestion CPU, and query speed.
+
+Three cardinality controls:
+1. Do not use high-cardinality values such as user_id as metric labels; use logs or traces instead.
+2. Use a limited set of label values, such as endpoint templates (/users/{id} instead of /users/123).
+3. Drop or relabel unnecessary labels during instrumentation, scraping, or metric processing.
+2. Percentiles and aggregation
+The average of 20 ms and 600 ms is 310 ms, but that is not the combined p99. Percentiles are based on the distribution of all 1,000 requests, not an average of instance percentiles.
+- Client-side summaries: accurate for one instance but usually cannot be aggregated correctly across instances; low storage cost.
+- Fixed-bucket histograms: can be aggregated by adding bucket counts; accuracy depends on bucket boundaries; medium storage cost.
+- Sketches: can be merged and estimate percentiles with controlled error; compact but approximate.
+Bucket boundaries should be concentrated around the latency objective. For example, if the SLO is 300 ms, buckets near 300 ms provide more useful accuracy for alerts and SLO calculations.
+3. Tail-based sampling memory and routing
+Memory required:
+2,000 traces/second × 8 spans/trace × 400 bytes/span × 20 seconds
+= 128,000,000 bytes
+≈ 128 MB
+All spans of one trace must go to the same sampler node so it can see the complete trace and make one consistent sampling decision.
+
+With hash(traceId) % N, growing from 4 to 5 nodes moves about 80% of traces.
+
+With consistent hashing, adding one node moves about:
+1 / 5 = 20%
+of traces, so it causes much less redistribution.
+4. traceparent header
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00
+- 00: version, 2 hex characters / 1 byte.
+- 4bf92f3577b34da6a3ce929d0e0e4736: trace ID, 32 hex characters / 16 bytes.
+- 00f067aa0ba902b7: parent ID, 16 hex characters / 8 bytes.
+- 00: trace flags, 2 hex characters / 1 byte.
+The last field contains sampling flags. 00 means the trace is not sampled. Services propagate this decision so all services handle the trace consistently.
+
+When calling the next service, the current service creates a new span ID and puts that new span ID in the outgoing parent-id field.
+5. Error budget and burn rate
+A 30-day period contains:
+30 × 24 × 60 = 43,200 minutes
+A 99.95% availability objective allows 0.05% failure:
+43,200 × 0.0005 = 21.6 minutes
+Error ratios:
+Burn rate 14.4: 14.4 × 0.05% = 0.72%
+Burn rate 6: 6 × 0.05% = 0.30%
+Budget consumed:
+Burn rate 14.4 for 1 hour:
+14.4 × 1 / 720 = 2% of the monthly error budget
+
+Burn rate 6 for 6 hours:
+6 × 6 / 720 = 5% of the monthly error budget
+At burn rate 6, the budget is exhausted in:
+30 / 6 = 5 days
+A long window detects sustained problems and avoids noise. A short window detects fast incidents and confirms the problem is happening now.
+
+The burn-rate-14.4 alert should page someone. The burn-rate-6 alert should create a ticket.
+6. Reliable telemetry pipeline
+A telemetry backend outage must not block the monitored application. The application should send telemetry asynchronously with bounded buffers and time limits.
+
+Overload options:
+- Buffering: absorbs short spikes, but may use too much memory during long outages.
+- Dropping: protects the application, but loses telemetry.
+- Sampling: keeps representative traces or logs, but loses some details.
+- Rate limiting: limits telemetry volume, but may discard excess data.
+At-least-once delivery may duplicate telemetry but reduces data loss. At-most-once delivery avoids duplicates but can lose telemetry during failures.
+
+The alerting system should run in a separate failure domain from the systems it monitors. Otherwise, one outage can disable both the application and its alerts.
+
+A watchdog or dead-man's-switch alert detects missing expected signals, such as a service that stops reporting metrics, logs, or heartbeats.
+
+:codex-file-citation{path="/Users/edgerunner-/Downloads/java-observability-homework 1.pdf" purpose="source"}
