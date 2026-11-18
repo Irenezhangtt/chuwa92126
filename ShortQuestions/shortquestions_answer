@@ -1,0 +1,91 @@
+## 1. API Priority and Fairness
+
+API Priority and Fairness (APF) is a Kubernetes API Server feature that classifies requests into priority levels and limits how much concurrency each level can use. Each priority level can have its own queue and concurrency share.
+
+APF prevents a misbehaving controller from starving critical system traffic by limiting the controller's request class. If that controller sends too many requests, its requests are queued or rejected, while high-priority traffic from system components can still receive API Server capacity.
+
+## 2. Mutating and validating admission
+
+Mutating admission runs first and can modify an incoming object. For example, it can add default values, labels, resource limits, or a sidecar container.
+
+Validating admission runs after mutation and decides whether the final object is allowed. For example, it can reject a Pod that uses a forbidden image or violates a security policy.
+
+External admission webhooks introduce availability and latency risks. If a webhook is slow or unavailable, it can delay or block Kubernetes API requests. Incorrect webhook configuration can also reject valid requests or allow unsafe objects.
+
+## 3. Informers, caches, work queues, and reconciliation
+
+An informer lists Kubernetes objects and watches for future changes. It stores objects in a local cache so the controller does not need to constantly query the API Server.
+
+When an object changes, the informer puts the object's key into a work queue. A worker reads the key, gets the latest object from the local cache, and calls the reconciliation function.
+
+The reconciliation function compares the desired state with the actual state and creates, updates, or deletes resources until the actual state matches the desired state.
+
+## 4. Level-triggered and idempotent reconciliation
+
+Kubernetes reconciliation should be level-triggered because controllers should react to the current state, not depend on one specific event. If an event is missed, a later reconciliation can still detect that desired state and actual state are different.
+
+Reconciliation should be idempotent because duplicate events and retries are normal. Running the same reconciliation more than once should produce the same final state.
+
+A controller can recover from missed events or stale caches by relisting resources, receiving a new `resourceVersion`, starting a new watch, and reconciling current objects again.
+
+## 5. CRDs and Operators
+
+A Custom Resource Definition (CRD) adds a new resource type to Kubernetes. For example, a CRD can define a `Database`, `KafkaCluster`, or `ModelServer` resource.
+
+An Operator is a controller that watches a CRD and manages the resources required by that custom object. It can automate deployment, configuration, scaling, backup, upgrades, and recovery.
+
+CRDs and Operators extend Kubernetes by allowing application-specific operations to use the same declarative API model as built-in Kubernetes resources.
+
+## 6. Requests, limits, capacity, allocatable resources, and QoS
+
+A resource request is the amount of CPU or memory Kubernetes reserves for a container when scheduling it. A resource limit is the maximum amount the container can use.
+
+Node capacity is the total physical resource of a node. Allocatable resources are the resources available to Pods after resources reserved for the operating system and Kubernetes components are removed.
+
+QoS classes affect eviction priority during resource pressure:
+
+- `BestEffort` Pods are evicted first because they have no requests or limits.
+- `Burstable` Pods are evicted after BestEffort Pods.
+- `Guaranteed` Pods are evicted last because they have the strongest resource guarantees.
+
+A Pod is `Guaranteed` when every container has CPU and memory requests equal to its limits.
+
+## 7. Kubernetes scheduler process
+
+The scheduler first filters nodes that cannot run the Pod. For example, it removes nodes with insufficient resources, incompatible taints, or unmatched node selectors.
+
+Next, the scheduler scores the remaining nodes using factors such as resource balance, affinity rules, and topology preferences.
+
+After choosing the best node, the scheduler reserves the node temporarily so other scheduling attempts do not use the same capacity.
+
+Finally, the scheduler binds the Pod to the selected node. The kubelet on that node then starts the Pod.
+
+## 8. Affinity, taints, tolerations, and preemption
+
+Node affinity controls which nodes a Pod prefers or requires. For example, a Pod may require a node with an SSD label.
+
+Pod affinity controls whether a Pod should run near other Pods. Pod anti-affinity controls whether a Pod should avoid running near other Pods.
+
+A taint is applied to a node and repels Pods. A toleration allows a Pod to be scheduled onto a node with a matching taint, but it does not guarantee that the Pod will be scheduled there.
+
+Priority-based preemption allows a high-priority Pod to remove lower-priority Pods when no suitable node has enough resources.
+
+## 9. kubelet, CRI, and CNI
+
+The kubelet runs on each node and ensures that the Pods assigned to that node are running according to their Pod specifications.
+
+The Container Runtime Interface (CRI) is the standard interface between kubelet and a container runtime. The runtime pulls images, creates containers, and starts containers.
+
+The Container Network Interface (CNI) configures Pod networking. It creates network interfaces, assigns IP addresses, configures routes, and connects the Pod to the cluster network.
+
+## 10. Services, EndpointSlices, kube-proxy, and CoreDNS
+
+A Service provides a stable name and virtual IP address for a group of Pods. It selects backend Pods by labels.
+
+EndpointSlices store the IP addresses and ports of the healthy Pods selected by a Service.
+
+kube-proxy watches Services and EndpointSlices, then configures network rules so traffic sent to the Service is forwarded to one of its backend Pods.
+
+CoreDNS provides DNS-based service discovery. It resolves a Service name, such as `payment.default.svc.cluster.local`, to the Service's ClusterIP.
+
+A regular ClusterIP Service has a virtual ClusterIP and load-balances traffic to backend Pods. A headless Service uses `clusterIP: None`, has no virtual IP, and DNS returns the individual Pod IP addresses directly. Headless Services are commonly used with StatefulSets.
